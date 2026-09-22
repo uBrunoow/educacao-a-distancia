@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Educação sem distância — EaD no Brasil</title>
+<meta name="description" content="Seminário sobre Educação a Distância: conceitos, histórico, legislação e perspectivas atuais no Brasil. TADS · UDESC.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..125,400..900&family=Martian+Mono:wdth,wght@75..112.5,500..800&display=swap">
+<style>
+/* ══════════════════════════ tokens ══════════════════════════ */
+:root{
+  --paper:#FFFFFF;
+  --ink:#000000;
+  --body:#3B3B3B;
+  --mute:#6E6E6E;
+  --off:#D8D8D8;
+
+  --yellow:#FFFF4D;
+  --coral:#FF5C5C;
+  --blue:#4D7CFF;
+  --lime:#7CFF5C;
+  --pink:#FF99FF;
+
+  --sans:'Anybody',ui-sans-serif,system-ui,sans-serif;
+  --mono:'Martian Mono',ui-monospace,'Courier New',monospace;
+
+  --cx:160px;   /* content left edge  */
+  --cr:120px;   /* content right edge */
+  --ct:156px;   /* content top edge   */
+  --cb:150px;   /* content bottom edge*/
+
+  --snap:steps(1,end);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+html{height:100%;background:var(--paper)}
+body{
+  height:100%;overflow:hidden;
+  background:var(--paper);color:var(--ink);
+  font-family:var(--sans);
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--yellow);color:var(--ink)}
+:focus-visible{outline:4px solid var(--blue);outline-offset:2px}
+
+/* ═══════════════════════ stage & scaling ═══════════════════════ */
+#viewport{position:fixed;inset:0;overflow:hidden}
+#stage{
+  position:absolute;left:50%;top:50%;
+  width:1920px;height:1080px;
+  transform-origin:0 0;overflow:hidden;
+  background:var(--paper);
+}
+
+/* ═══════════════════════════ slides ═══════════════════════════ */
+.slide{
+  position:absolute;inset:0;
+  padding:var(--ct) var(--cr) var(--cb) var(--cx);
+  background:var(--paper);
+  display:none;
+}
+.slide.is-active{display:block}
+/* a slide exits the way a completed line does: one inverted frame, then the
+   row closes on itself and what is underneath is already there */
+.slide.is-out{display:block;z-index:3;animation:clearline .32s steps(6,end) forwards}
+@keyframes clearline{
+  0%  {clip-path:inset(0 0 0 0);filter:invert(1)}
+  16% {clip-path:inset(0 0 0 0);filter:none}
+  100%{clip-path:inset(50% 0 50% 0);filter:none}
+}
+html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom:6px solid var(--ink)}
+
+/* ── motion ──────────────────────────────────────────────────────
+   Everything arrives the way a Tetris piece does: it falls along the
+   pixel grid in whole-cell steps and locks hard. There is no easing
+   curve anywhere in this deck — the grid is the timing function.   */
+@keyframes lock{from{opacity:0}to{opacity:1}}
+@keyframes fall{from{transform:translateY(var(--fall,-96px))}to{transform:translateY(0)}}
+
+.js [data-step]{opacity:0}
+.js [data-step].is-in{
+  --fall:-80px;
+  animation:fall .3s steps(5,end) both, lock .01s var(--snap) both;
+}
+
+/* the headline lands first, then the artwork stacks under it */
+.js .slide.is-active > .h,
+.js .slide.is-active > .lead,
+.js .slide.is-active .meta,
+.js .slide.is-active .cover > h1,
+.js .slide.is-active .cover > .lead,
+.js .slide.is-active .sign{
+  --fall:-64px;
+  animation:fall .26s steps(4,end) both, lock .01s var(--snap) both;
+}
+
+/* the closing frame is one full-height piece dropping into the well */
+.js .finale.is-in{
+  --fall:-1080px;
+  animation:fall .52s steps(12,end) both, lock .01s var(--snap) both;
+}
+
+/* ═════════════════════════ typography ═════════════════════════ */
+.h{
+  font-size:84px;line-height:.98;font-weight:800;font-stretch:112%;
+  letter-spacing:-.032em;max-width:24ch;text-wrap:balance;
+}
+.h-xl{font-size:132px;line-height:.92;font-weight:900;font-stretch:118%;letter-spacing:-.042em}
+.lead{
+  margin-top:28px;max-width:50ch;
+  font-size:26px;line-height:1.42;font-weight:450;color:var(--body);
+}
+.lbl{
+  display:block;
+  font-family:var(--mono);font-size:14px;font-weight:700;font-stretch:88%;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--mute);
+}
+
+
+/* ═════════════════════ the letterbox wells ═════════════════════ */
+/* A 16:9 canvas in a wider window leaves two dead gutters. They are not
+   dead: each one is a Tetris well that plays for as long as the deck is
+   open. On a 16:9 projector the gutters vanish and so do the wells.    */
+.gutter{position:absolute;top:0;bottom:0;z-index:0;overflow:hidden;display:none}
+.gutter[data-live]{display:block}
+.gutter.l{left:0}
+.gutter.r{right:0}
+.gutter i{position:absolute;display:block}
+#stage{z-index:1}
+
+/* ═══════════════════════ the pixel engine ═══════════════════════ */
+/* every illustration in this deck is authored cell by cell in data-px */
+.px{
+  display:grid;
+  grid-template-columns:repeat(var(--cols),var(--u,24px));
+  grid-auto-rows:var(--u,24px);
+}
+.px i{display:block}
+.js .px i{opacity:0}
+.js .is-active .px i,
+.js .is-drawn .px i{
+  --fall:calc(var(--u,24px) * -7);
+  animation:fall .42s steps(7,end) both, lock .01s var(--snap) both;
+  animation-delay:calc(min(var(--d) * 30ms, 900ms));
+}
+
+/* ═══════════════════════════ chrome ═══════════════════════════ */
+#chrome{position:absolute;left:72px;top:58px;display:flex;align-items:center;gap:22px;z-index:6}
+#section{
+  font-family:var(--mono);font-size:13px;font-weight:700;font-stretch:88%;
+  letter-spacing:.22em;color:var(--mute);
+}
+#foot{position:absolute;left:var(--cx);bottom:68px;z-index:6;display:flex;align-items:center;gap:28px}
+#steps{display:flex;gap:7px}
+#steps i{width:16px;height:16px;background:var(--off)}
+#steps i.on{background:var(--ink)}
+#steps i.now{background:var(--coral);animation:pip .16s steps(3,end)}
+@keyframes pip{from{transform:scale(.25)}to{transform:scale(1)}}
+#nums{
+  font-family:var(--mono);font-size:15px;font-weight:700;font-stretch:88%;
+  letter-spacing:.14em;color:var(--mute);white-space:nowrap;
+}
+#nums b{color:var(--ink)}
+#stage[data-tone="cover"] #section{display:none}
+#stage[data-tone="cover"] #foot{display:none}
+#stage[data-tone="cover"] #keys{right:470px}
+#keys{
+  position:absolute;right:var(--cr);top:58px;z-index:6;
+  display:flex;gap:20px;align-items:center;
+  font-family:var(--mono);font-size:12px;font-weight:600;font-stretch:88%;
+  letter-spacing:.14em;color:var(--mute);
+  transition:opacity .4s var(--snap);
+}
+#keys[data-dim]{opacity:.35}
+#keys kbd{font:inherit;background:var(--ink);color:var(--paper);padding:3px 6px;margin-right:6px}
+#stage[data-flood] #chrome,
+#stage[data-flood] #foot,
+#stage[data-flood] #keys{display:none}
+
+/* ═══════════════ 01 · capa ═══════════════ */
+.cover{position:absolute;inset:0;padding:var(--ct) 0 96px var(--cx)}
+.band{position:absolute;right:0;top:-12px}
+.meta{display:flex;align-items:center;gap:18px;position:absolute;top:60px;left:var(--cx)}
+.meta span{font-family:var(--mono);font-size:13px;font-weight:700;font-stretch:88%;letter-spacing:.22em;color:var(--mute)}
+.meta i{width:7px;height:7px;background:var(--ink);flex:none}
+.cover h1{margin-top:14px}
+.cover .lead{margin-top:38px;max-width:34ch;color:var(--ink);font-weight:500;font-size:28px}
+
+.sign{position:absolute;left:var(--cx);bottom:96px;display:flex;align-items:flex-end;gap:44px}
+.frames{background:var(--blue);padding:20px;flex:none}
+.fr-in{background:var(--pink);padding:20px}
+.fr-px{background:var(--paper);padding:16px}
+.tag{background:var(--yellow);padding:18px 24px 20px}
+.tag .who{font-size:20px;font-weight:700;font-stretch:102%;line-height:1.5;letter-spacing:-.008em;white-space:nowrap}
+.bar{margin-top:10px;background:var(--ink);color:var(--paper);padding:12px 24px;display:inline-block}
+.bar span{font-family:var(--mono);font-size:14px;font-weight:700;font-stretch:88%;letter-spacing:.2em}
+.cursor{position:absolute;left:1180px;bottom:-140px}
+
+/* ═══════════════ 02 · o percurso ═══════════════ */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:96px;max-width:1520px}
+.flow > div{padding:26px 30px 120px;border-top:6px solid var(--ink);position:relative}
+.flow > div + div{border-left:3px solid var(--off)}
+.flow p{margin-top:16px;font-size:30px;font-weight:750;font-stretch:104%;letter-spacing:-.022em;line-height:1.14}
+.flow .fill{position:absolute;left:30px;bottom:34px;width:46px;height:46px;background:var(--off)}
+.flow > div:nth-child(1) .fill{background:var(--blue)}
+.flow > div:nth-child(2) .fill{background:var(--blue)}
+.flow > div:nth-child(3) .fill{background:var(--blue)}
+.flow > div:nth-child(4) .fill{background:var(--yellow)}
+
+/* ═══════════════ 03 · os dois polos ═══════════════ */
+.poles{display:flex;align-items:center;gap:0;margin-top:108px}
+.pole{background:var(--ink);color:var(--paper);padding:34px 46px;flex:none}
+.pole p{font-size:34px;font-weight:800;font-stretch:106%;letter-spacing:-.026em}
+.bridge{background:var(--yellow);padding:34px 40px;flex:none;display:flex;align-items:center;gap:26px}
+.bridge span{font-family:var(--mono);font-size:16px;font-weight:700;font-stretch:88%;letter-spacing:.18em}
+.conds{display:grid;grid-template-columns:repeat(2,380px);gap:0;margin-top:72px}
+.conds > div{border-top:6px solid var(--ink);padding:22px 0 0}
+.conds > div + div{margin-left:60px}
+.conds p{margin-top:12px;font-size:32px;font-weight:750;font-stretch:104%;letter-spacing:-.024em}
+
+/* ═══════════════ 04 · características ═══════════════ */
+.rows{margin-top:84px;max-width:1430px}
+.rows > div{
+  display:grid;grid-template-columns:64px 420px 1fr;gap:44px;align-items:start;
+  padding:30px 0;border-bottom:3px solid var(--off);
+}
+.rows > div:first-child{border-top:6px solid var(--ink)}
+.rows > div:last-child{border-bottom:6px solid var(--ink)}
+.rows .chip{width:46px;height:46px;margin-top:4px}
+.rows > div:nth-child(1) .chip{background:var(--lime)}
+.rows > div:nth-child(2) .chip{background:var(--yellow)}
+.rows > div:nth-child(3) .chip{background:var(--coral)}
+.rows > div:nth-child(4) .chip{background:var(--blue)}
+.rows h3{font-size:34px;font-weight:800;font-stretch:106%;letter-spacing:-.026em;line-height:1.04}
+.rows p{font-size:21px;line-height:1.45;color:var(--body);padding-top:5px}
+
+/* ═══════════════ 05 · linha do tempo ═══════════════ */
+/* x is derived from the year: 1728–1856, a marked break, then 1904–2005 */
+.tl{position:absolute;left:var(--cx);right:var(--cr);top:400px;height:392px}
+.tl-axis{position:absolute;left:0;right:0;top:50%;height:11px;transform:translateY(-50%);
+  background:repeating-linear-gradient(90deg,var(--ink) 0 11px,transparent 11px 22px)}
+.tl-t{position:absolute;left:0;right:0}
+.tl-t.w{bottom:50%}
+.tl-t.b{top:50%}
+.tl-side{position:absolute;right:0;font-family:var(--mono);font-size:14px;font-weight:700;font-stretch:88%;letter-spacing:.2em;color:var(--mute)}
+.tl-t.w .tl-side{bottom:16px}
+.tl-t.b .tl-side{top:16px}
+.tl-i{position:absolute;width:160px;left:var(--x);--conn:64px}
+.tl-i.far{--conn:174px}
+.tl-t.w .tl-i{bottom:var(--conn)}
+.tl-t.b .tl-i{top:var(--conn)}
+.tl-i::before{content:"";position:absolute;left:0;width:3px;background:var(--ink)}
+.tl-t.w .tl-i::before{bottom:calc(-1 * var(--conn));height:var(--conn)}
+.tl-t.b .tl-i::before{top:calc(-1 * var(--conn));height:var(--conn)}
+.tl-i::after{content:"";position:absolute;left:-7px;width:17px;height:17px;background:var(--ink)}
+.tl-t.w .tl-i::after{bottom:calc(-1 * var(--conn) - 17px)}
+.tl-t.b .tl-i::after{top:calc(-1 * var(--conn))}
+.tl-y{font-size:36px;font-weight:850;font-stretch:88%;letter-spacing:-.01em;line-height:1}
+.tl-n{margin-top:9px;font-size:18px;font-weight:600;font-stretch:98%;line-height:1.26;color:var(--body)}
+/* the axis is not linear across the 1856→1904 gap, and says so */
+.tl-break{position:absolute;top:50%;left:var(--x);width:62px;height:48px;transform:translateY(-50%);background:var(--paper);z-index:2}
+.tl-break i{position:absolute;width:8px;height:16px;background:var(--ink)}
+.tl-break i:nth-child(1){left:6px;top:32px}
+.tl-break i:nth-child(2){left:14px;top:16px}
+.tl-break i:nth-child(3){left:22px;top:0}
+.tl-break i:nth-child(4){left:32px;top:32px}
+.tl-break i:nth-child(5){left:40px;top:16px}
+.tl-break i:nth-child(6){left:48px;top:0}
+.gens{position:absolute;left:var(--cx);right:var(--cr);top:838px;height:96px}
+.gens > div{position:absolute;left:var(--a);width:calc(var(--b) - var(--a));padding-top:22px}
+.gens > div::before{content:"";position:absolute;left:0;top:0;right:0;height:14px;background:var(--c)}
+.gens p{margin-top:10px;font-size:25px;font-weight:780;font-stretch:102%;letter-spacing:-.02em}
+
+/* ═══════════════ 06 · mão única → interação ═══════════════ */
+.duo{display:grid;grid-template-columns:1fr 1.5fr;gap:0;margin-top:76px}
+.duo > div{border-top:6px solid var(--ink);padding:26px 0 0;min-width:0}
+.duo > div + div{padding-left:64px;margin-left:64px;border-left:3px solid var(--off)}
+.duo h3{margin-top:14px;font-size:34px;font-weight:800;font-stretch:106%;letter-spacing:-.026em}
+.node{
+  display:inline-block;text-align:center;white-space:nowrap;
+  font-size:20px;font-weight:700;padding:15px 20px;
+  border:4px solid var(--ink);background:var(--paper);
+}
+.node.hub{background:var(--blue);border-color:var(--blue)}
+.oneway{margin-top:40px}
+.oneway .node{min-width:230px}
+.oneway .stem{margin:0 0 0 104px}
+.net{margin-top:40px}
+.net-r{display:flex;align-items:center;justify-content:flex-start}
+.net-b{display:flex;justify-content:center;margin-top:6px}
+
+/* ═══════════════ 07 · artigo 80 ═══════════════ */
+.law{display:grid;grid-template-columns:480px 1fr;gap:96px;margin-top:64px;align-items:center}
+.law-n{background:var(--pink);padding:26px 40px 34px;display:inline-block}
+.law-n p:first-child{font-size:210px;line-height:.78;font-weight:900;font-stretch:118%;letter-spacing:-.06em}
+.law-n p:last-child{margin-top:16px;font-family:var(--mono);font-size:14px;font-weight:700;font-stretch:88%;letter-spacing:.16em}
+.crits{display:grid;grid-template-columns:1fr 1fr;gap:0 52px}
+.crits p{
+  display:flex;align-items:center;gap:18px;
+  padding:20px 0;border-bottom:3px solid var(--off);
+  font-size:22px;font-weight:600;
+}
+.crits p:nth-last-child(-n+2){border-bottom:0}
+.crits p::before{content:"";width:18px;height:18px;background:var(--pink);flex:none}
+
+/* ═══════════════ 08 · gestão e qualidade ═══════════════ */
+.sys{margin-top:80px;max-width:1560px}
+.sys-top{display:flex;justify-content:center}
+.sys-top span{background:var(--yellow);padding:18px 44px;font-family:var(--mono);font-size:20px;font-weight:700;font-stretch:88%;letter-spacing:.16em}
+/* the legs land on the centre of each column below: (1560-120)/3 = 480 wide,
+   so the outer columns centre at 15.4% and 84.6% of the wire's own width */
+.sys-wire{position:relative;height:96px}
+.sys-wire i{position:absolute;background:var(--ink)}
+.sys-wire .v{width:6px}
+.sys-wire .hbar{height:6px;left:15.4%;right:15.4%;top:40px}
+.sys-wire .t{top:0;height:40px;left:50%;margin-left:-3px}
+.sys-wire .a{top:40px;height:56px;left:15.4%}
+.sys-wire .b{top:40px;height:56px;left:50%;margin-left:-3px}
+.sys-wire .c{top:40px;height:56px;right:15.4%}
+
+/* the wire is drawn out of the node, never dropped past it — as two separate
+   step elements the stem arrived 60ms after the tag it hangs off */
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.js .sys-head.is-in .sys-wire{
+  transform-origin:50% 0;
+  animation:grow .32s steps(6,end) both;
+  animation-delay:.18s;
+}
+.sys-c{display:grid;grid-template-columns:repeat(3,1fr);gap:60px}
+.sys-c > div{border-top:6px solid var(--ink);padding-top:24px}
+.sys-c h3{font-size:34px;font-weight:800;font-stretch:106%;letter-spacing:-.026em}
+.sys-c p{margin-top:14px;font-size:20px;line-height:1.45;color:var(--body)}
+
+/* ═══════════════ 09 · evasão e tutoria ═══════════════ */
+.drop{display:grid;grid-template-columns:520px 1fr;gap:104px;margin-top:64px;align-items:start}
+.drop-n{background:var(--coral);padding:22px 34px 30px;display:inline-block}
+.drop-n p{font-size:146px;line-height:.82;font-weight:900;font-stretch:112%;letter-spacing:-.05em}
+.drop-c{margin-top:28px;font-size:20px;line-height:1.5;color:var(--body);max-width:44ch}
+.drop-c + .drop-c{margin-top:20px;padding-top:20px;border-top:3px solid var(--off)}
+.jn{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:8px}
+.jn > div{border-top:6px solid var(--off);padding:22px 26px 0}
+.jn > div h3{font-size:30px;font-weight:780;font-stretch:104%;letter-spacing:-.024em}
+.jn > div.peak{border-top-color:var(--coral)}
+.jn > div.peak h3{font-size:38px;font-weight:900}
+.jn > div p{margin-top:14px;font-size:19px;line-height:1.45;color:var(--body)}
+
+/* ═══════════════ 10 · futuro e conclusão ═══════════════ */
+.fronts{display:grid;grid-template-columns:repeat(3,1fr);gap:64px;margin-top:80px;max-width:1560px}
+.fronts > div{padding-top:24px;position:relative}
+.fronts > div::before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:var(--lime)}
+.fronts h3{font-size:38px;font-weight:850;font-stretch:108%;letter-spacing:-.03em}
+.fronts p{margin-top:14px;font-size:20px;line-height:1.45;color:var(--body)}
+.closing{margin-top:88px;padding-top:44px;border-top:6px solid var(--ink);max-width:1400px}
+.closing p{font-size:34px;line-height:1.3;font-weight:600;font-stretch:102%;letter-spacing:-.014em}
+
+/* the last beat: the whole frame floods and the cover line comes back */
+.finale{
+  position:absolute;inset:0;background:var(--paper);z-index:10;
+  padding:var(--ct) var(--cr) 110px var(--cx);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.finale h2{font-size:150px;line-height:.92;font-weight:900;font-stretch:118%;letter-spacing:-.046em}
+.finale .thanks{
+  position:absolute;left:var(--cx);right:var(--cr);bottom:110px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:48px;
+  padding-top:30px;border-top:6px solid var(--ink);
+}
+.finale .thanks b{font-size:30px;font-weight:800;font-stretch:106%;letter-spacing:-.024em;white-space:nowrap}
+.finale .thanks span{font-family:var(--mono);font-size:14px;font-weight:500;font-stretch:88%;letter-spacing:.08em;text-align:right;line-height:1.7}
+.finale .px{position:absolute;right:var(--cr);top:150px}
+
+
+/* ═════════════════════ reduced motion ═════════════════════ */
+@media (prefers-reduced-motion:reduce){
+  .js [data-step].is-in,
+  .js .finale.is-in,
+  .js .px i,
+  .js .is-active .px i,
+  .js .is-drawn .px i,
+  .js .slide.is-active > .h,
+  .js .slide.is-active > .lead,
+  .js .slide.is-active .meta,
+  .js .slide.is-active .cover > h1,
+  .js .slide.is-active .cover > .lead,
+  .js .slide.is-active .sign{
+    animation:lock .01s var(--snap) both!important;
+    animation-delay:0s!important;
+  }
+  .js .sys-head.is-in .sys-wire{animation:none!important;transform:none!important}
+  .slide.is-out{display:none;animation:none}
+  #steps i.now{animation:none}
+  #keys{transition:none}
+}
+</style>
+</head>
+<body>
+<!--
+DIRECTION CONTRACT
+THESIS: distance education rendered at the resolution it was actually built at — one idea per frame, drawn on a visible grid. Refuses the dark-console slide deck and the identical-card grid.
+OWN-WORLD: white paper, pure black ink, five flat toy colours (#FFFF4D #FF5C5C #4D7CFF #7CFF5C #FF99FF). No gradient, no shadow, no radius. Anybody grotesque set wide and heavy; Martian Mono for anything measured. Every illustration is authored cell by cell in data-px.
+STORY: the audience learns the EaD is almost 300 years old, sees the three generations on one axis, then hears the argument that expansion is not maturity.
+FIRST VIEWPORT: title upper-left at 132px over white; a full-height column of interlocking colour blocks on the right fifth; bottom-left a blue frame inside a pink frame, a yellow name tag, a black role bar, a pink pixel cursor climbing off the base.
+FORM: brief-pinned neo-brutalist pixel art; no concept roll.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
+-->
+<div id="viewport">
+<div class="gutter l" aria-hidden="true"></div>
+<div class="gutter r" aria-hidden="true"></div>
+<div id="stage">
+
+<!-- ═══════════════ 01 · CAPA ═══════════════ -->
+<section class="slide" data-section="ABERTURA" data-tone="cover">
+  <div class="cover">
+    <div class="band px" data-px="YYYYBBBB/YYYYBBBB/YYYYBBBB/CCCCBBBB/CCCCLLLL/CCCCLLLL/PPPPLLLL/PPPPLLLL/PPPPYYYY/BBPPYYYY/BBPPYYYY/BBBBYYCC/BBBBLLCC/YYYYLLCC/YYYYLLCC/YYCCLLPP/LLCCPPPP/LLCCPPPP/LLBBPPYY/LLBBBBYY/CCBBBBYY/CCBBBBYY/CCCCBBBB" style="--u:48px" aria-hidden="true"></div>
+
+    <div class="meta"><span>INFORMÁTICA NA EDUCAÇÃO</span><i></i><span>SEMINÁRIOS EM GRUPOS</span></div>
+
+    <h1 class="h-xl">EDUCAÇÃO<br>SEM DISTÂNCIA.</h1>
+    <p class="lead">Conceitos, histórico, legislação e perspectivas atuais no Brasil.</p>
+
+    <div class="sign">
+      <div class="frames">
+        <div class="fr-in">
+          <div class="fr-px">
+            <div class="px" data-px="KKKKKKKKKK/K........K/K...CC...K/K...CC...K/K..CCCC..K/K.CCCCCC.K/K.C.CC.C.K/K........K/KKKKKKKKKK/..KKKKKK.." style="--u:14px" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="tag">
+          <p class="who">Bruno Werner &nbsp;&nbsp; Antônio Budal Arins de Lima<br>Nicolas Daniel Malheiros &nbsp;&nbsp; Daniel Menezes Cordeiro Junior</p>
+        </div>
+        <div class="bar"><span>TADS &nbsp;&nbsp;·&nbsp;&nbsp; UDESC</span></div>
+      </div>
+    </div>
+
+    <div class="cursor px" data-px="P......./PP....../PPP...../PPPP..../PPPPP.../PPPPPP../PPPPPPP./PPPPPPPP/PPPPP.../PP.PP.../P..PP.../....PP../....PP.." style="--u:38px" aria-hidden="true"></div>
+  </div>
+
+</section>
+
+<!-- ═══════════════ 02 · A SALA DE AULA MUDOU ═══════════════ -->
+<section class="slide" data-section="CONTEXTO">
+  <h2 class="h">A sala de aula mudou.</h2>
+  <p class="lead">A EaD saiu da margem e virou um caminho central de acesso ao ensino superior brasileiro.</p>
+
+  <div class="flow">
+    <div><span class="lbl">ONDE COMEÇOU</span><p>Sala física</p><i class="fill"></i></div>
+    <div><span class="lbl">O QUE ABRIU</span><p>Internet</p><i class="fill"></i></div>
+    <div><span class="lbl">ONDE ACONTECE</span><p>Plataformas digitais</p><i class="fill"></i></div>
+    <div><span class="lbl">COMO SE ESTUDA HOJE</span><p>Aprender sob demanda</p><i class="fill"></i></div>
+  </div>
+
+  <div class="px" data-px="....BBBB/..BBBBBB/..BBBB../YYBB..../YYYY..../YY......" style="--u:38px;position:absolute;right:0;bottom:0" aria-hidden="true"></div>
+
+</section>
+
+<!-- ═══════════════ 03 · O QUE É EaD ═══════════════ -->
+<section class="slide" data-section="CONCEITO">
+  <h2 class="h">Aprender sem dividir o mesmo espaço.</h2>
+  <p class="lead">Professor e aluno separados no espaço e no tempo, com a tecnologia fazendo a mediação.</p>
+
+  <div class="poles">
+    <div class="pole"><p>Professor</p></div>
+    <div class="bridge">
+      <div class="px" data-px="K.K.K" style="--u:11px" aria-hidden="true"></div>
+      <span>MEDIAÇÃO TECNOLÓGICA</span>
+      <div class="px" data-px="K.K.K" style="--u:11px" aria-hidden="true"></div>
+    </div>
+    <div class="pole"><p>Estudante</p></div>
+  </div>
+
+  <div class="conds" data-step="1">
+    <div><span class="lbl">ESPAÇO</span><p>Lugares diversos</p></div>
+    <div><span class="lbl">TEMPO</span><p>Tempos diversos</p></div>
+  </div>
+
+  <div class="px" data-px="......YY/....YYYY/....YY../..YYYY../..YY..../PPYY..../PPPP...." style="--u:36px;position:absolute;right:0;bottom:0" aria-hidden="true"></div>
+
+</section>
+
+<!-- ═══════════════ 04 · QUATRO CARACTERÍSTICAS ═══════════════ -->
+<section class="slide" data-section="CONCEITO">
+  <h2 class="h">Quatro características definem essa experiência.</h2>
+
+  <div class="rows">
+    <div data-step="0"><i class="chip"></i><h3>Distância mediada</h3><p>A tecnologia medeia o ensino e a aprendizagem.</p></div>
+    <div data-step="1"><i class="chip"></i><h3>Autonomia</h3><p>Estudo auto-organizado e independente.</p></div>
+    <div data-step="2"><i class="chip"></i><h3>Interatividade</h3><p>O estudante participa, critica e colabora.</p></div>
+    <div data-step="3"><i class="chip"></i><h3>Flexibilidade</h3><p>Estudo e trabalho coexistem no ritmo de cada um.</p></div>
+  </div>
+
+  <div class="px" data-px="LL....../LLLL..../..LLLL../..LLYYYY/....YYYY" style="--u:34px;position:absolute;right:0;bottom:0" aria-hidden="true"></div>
+
+</section>
+
+<!-- ═══════════════ 05 · HISTÓRICO ═══════════════ -->
+<section class="slide" data-section="HISTÓRICO">
+  <h2 class="h">A EaD começou muito antes da internet.</h2>
+
+  <div class="tl">
+    <div class="tl-axis" aria-hidden="true"></div>
+    <span class="tl-break" style="--x:268px" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    <div class="tl-t w">
+      <span class="tl-side">MUNDO</span>
+      <div class="tl-i" style="--x:0"        data-step="0"><p class="tl-y">1728</p><p class="tl-n">Caleb Phillips</p></div>
+      <div class="tl-i" style="--x:203px"    data-step="0"><p class="tl-y">1856</p><p class="tl-n">Escola de línguas, Berlim</p></div>
+      <div class="tl-i far" style="--x:995px" data-step="1"><p class="tl-y">1960</p><p class="tl-n">Rádio e televisão</p></div>
+      <div class="tl-i" style="--x:1091px"    data-step="1"><p class="tl-y">1969</p><p class="tl-n">Open University</p></div>
+      <div class="tl-i" style="--x:1316px"   data-step="2"><p class="tl-y">1990</p><p class="tl-n">Computadores e redes</p></div>
+    </div>
+    <div class="tl-t b">
+      <span class="tl-side">BRASIL</span>
+      <div class="tl-i" style="--x:396px"    data-step="0"><p class="tl-y">1904</p><p class="tl-n">Escolas Internacionais</p></div>
+      <div class="tl-i" style="--x:599px"    data-step="1"><p class="tl-y">1923</p><p class="tl-n">Rádio Sociedade do RJ</p></div>
+      <div class="tl-i" style="--x:1102px"   data-step="1"><p class="tl-y">1970</p><p class="tl-n">Minerva, Saci, Telecursos</p></div>
+      <div class="tl-i far" style="--x:1380px" data-step="2"><p class="tl-y">1996</p><p class="tl-n">LDB nº 9.394</p></div>
+      <div class="tl-i" style="--x:1477px"   data-step="2"><p class="tl-y">2005</p><p class="tl-n">Universidade Aberta do Brasil</p></div>
+    </div>
+  </div>
+
+  <div class="gens">
+    <div style="--a:0px;--b:567px;--c:var(--coral)"       data-step="0"><span class="lbl">PRIMEIRA GERAÇÃO</span><p>Impresso e correio</p></div>
+    <div style="--a:599px;--b:1284px;--c:var(--yellow)"   data-step="1"><span class="lbl">SEGUNDA GERAÇÃO</span><p>Rádio e televisão</p></div>
+    <div style="--a:1316px;--b:1640px;--c:var(--blue)"    data-step="2"><span class="lbl">TERCEIRA GERAÇÃO</span><p>Redes digitais</p></div>
+  </div>
+
+</section>
+
+<!-- ═══════════════ 06 · MÃO ÚNICA → INTERAÇÃO ═══════════════ -->
+<section class="slide" data-section="HISTÓRICO">
+  <h2 class="h">A tecnologia mudou mais do que o canal.</h2>
+  <p class="lead">O estudante deixou de apenas receber.</p>
+
+  <div class="duo">
+    <div>
+      <span class="lbl">ANTES</span>
+      <h3>Mão única</h3>
+      <div class="oneway">
+        <span class="node">Conteúdo</span>
+        <div class="stem px" data-px="..KK../..KK../..KK../..KK../..KK../KKKKKK/.KKKK./..KK.." style="--u:11px" aria-hidden="true"></div>
+        <span class="node">Aluno</span>
+      </div>
+    </div>
+    <div>
+      <span class="lbl">HOJE</span>
+      <h3>Bidirecional</h3>
+      <div class="net">
+        <div class="net-r">
+          <span class="node">Aluno</span>
+          <div class="px" data-px="..B.....B../.BB.....BB./BBBBBBBBBBB/.BB.....BB./..B.....B.." style="--u:7px;margin:0 14px" aria-hidden="true"></div>
+          <span class="node hub">Plataforma</span>
+          <div class="px" data-px="..B.....B../.BB.....BB./BBBBBBBBBBB/.BB.....BB./..B.....B.." style="--u:7px;margin:0 14px" aria-hidden="true"></div>
+          <span class="node">Professor</span>
+        </div>
+        <div class="net-b" data-step="1">
+          <div>
+            <div class="px" data-px="..BB../..BB../..BB../..BB../BBBBBB/.BBBB./..BB.." style="--u:10px;margin:10px auto" aria-hidden="true"></div>
+            <span class="node">Outros alunos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</section>
+
+<!-- ═══════════════ 07 · ARTIGO 80 ═══════════════ -->
+<section class="slide" data-section="LEGISLAÇÃO">
+  <h2 class="h" style="max-width:24ch">A educação digital também precisa de regras.</h2>
+  <p class="lead" style="max-width:62ch">O artigo 80 da LDB deu base legal à EaD e criou a exigência de regular e supervisionar.</p>
+
+  <div class="law">
+    <div>
+      <div class="law-n">
+        <p>80</p>
+        <p>ARTIGO 80 · LDB Nº 9.394/96</p>
+      </div>
+    </div>
+    <div class="crits" data-step="1">
+      <p>Concepção de educação</p>
+      <p>Avaliação docente</p>
+      <p>Material didático</p>
+      <p>Avaliação da aprendizagem</p>
+      <p>Equipe multidisciplinar</p>
+      <p>Infraestrutura de apoio</p>
+    </div>
+  </div>
+
+  <div class="px" data-px="PPPP..../PPPPPP../..PPPP../..PPKKKK/....KKKK" style="--u:30px;position:absolute;right:0;bottom:0" aria-hidden="true"></div>
+
+</section>
+
+<!-- ═══════════════ 08 · GESTÃO E QUALIDADE ═══════════════ -->
+<section class="slide" data-section="LEGISLAÇÃO">
+  <h2 class="h">Uma plataforma não é uma educação.</h2>
+  <p class="lead" style="max-width:60ch">Qualidade vem de três frentes combinadas. Nenhuma delas basta sozinha.</p>
+
+  <div class="sys">
+    <div class="sys-head" data-step="1">
+      <div class="sys-top"><span>QUALIDADE</span></div>
+      <div class="sys-wire" aria-hidden="true">
+        <i class="v t"></i><i class="hbar"></i><i class="v a"></i><i class="v b"></i><i class="v c"></i>
+      </div>
+    </div>
+    <div class="sys-c">
+      <div><h3>Pedagogia</h3><p>A concepção que sustenta o curso, e o material didático.</p></div>
+      <div><h3>Equipe</h3><p>Corpo docente acompanhado, e a avaliação da aprendizagem.</p></div>
+      <div><h3>Tecnologia</h3><p>Ambiente virtual e infraestrutura de apoio.</p></div>
+    </div>
+  </div>
+
+  <div class="px" data-px="....YYYY/..YYYYYY/..YYYY../LLYY..../LLLL..../LL......" style="--u:32px;position:absolute;right:0;bottom:0" aria-hidden="true"></div>
+
+</section>
+
+<!-- ═══════════════ 09 · EVASÃO E TUTORIA ═══════════════ -->
+<section class="slide" data-section="DESAFIOS">
+  <h2 class="h">Acesso não garante permanência.</h2>
+
+  <div class="drop">
+    <div>
+      <div class="drop-n"><p>30%+</p></div>
+      <p class="drop-c">Instituições enfrentavam evasão de 30% ou mais, segundo o estudo citado no artigo. Falta de tempo e não adaptação à metodologia são as causas apontadas.</p>
+      <p class="drop-c">Perfil apontado pela referência: mulheres, entre 18 e 40 anos, que estudam e trabalham.</p>
+    </div>
+    <div>
+      <div class="jn">
+        <div><h3>Entrar</h3></div>
+        <div data-step="0"><h3>Estudar</h3></div>
+        <div class="peak" data-step="1"><h3>Permanecer</h3><p>O ponto crítico. É onde a tutoria decide.</p></div>
+        <div data-step="2"><h3>Concluir</h3></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px" data-px="CC....../CCCC..../..CCCC../..CCCC../....CC.." style="--u:34px;position:absolute;right:0;bottom:0" aria-hidden="true"></div>
+
+</section>
+
+<!-- ═══════════════ 10 · FUTURO E CONCLUSÃO ═══════════════ -->
+<section class="slide final" data-section="FUTURO">
+  <h2 class="h">O próximo passo não é crescer. É amadurecer.</h2>
+
+  <div class="fronts">
+    <div><h3>TDIC</h3><p>Consolidar as tecnologias digitais, superando a visão emergencial.</p></div>
+    <div><h3>Interação</h3><p>Ambientes que formem comunidades de alunos.</p></div>
+    <div><h3>Avaliação</h3><p>Medir resultados formativos, e não vagas abertas.</p></div>
+  </div>
+
+  <div class="closing" data-step="1">
+    <p>A expansão recente foi quantitativa e concentrou a oferta em dois cursos: Pedagogia e Administração.</p>
+  </div>
+
+  <div class="finale" data-step="2">
+    <h2>EDUCAÇÃO<br>SEM DISTÂNCIA.</h2>
+    <div class="px" data-px="KKKK.....KKKK/KKKK.....KKKK/KKKK.K.K.KKKK/KKKK.....KKKK/KKKK.....KKKK" style="--u:22px" aria-hidden="true"></div>
+    <div class="thanks">
+      <b>Obrigado. Perguntas?</b>
+      <span>Bruno Werner &nbsp; Antônio Budal Arins de Lima &nbsp; Nicolas Daniel Malheiros<br>Daniel Menezes Cordeiro Junior &nbsp;&nbsp;·&nbsp;&nbsp; TADS &nbsp;&nbsp;·&nbsp;&nbsp; UDESC</span>
+    </div>
+  </div>
+
+</section>
+
+<!-- deck chrome -->
+<div id="chrome">
+  <div class="px is-drawn" data-px="KKK.....KKK/KKK.C.C.KKK/KKK.....KKK" style="--u:7px" aria-hidden="true"></div>
+  <p id="section"></p>
+</div>
+<div id="foot">
+  <div id="steps" aria-hidden="true"></div>
+  <p id="nums"><b></b> / <span></span></p>
+</div>
+<p id="keys"><span><kbd>←</kbd><kbd>→</kbd>NAVEGAR</span><span><kbd>P</kbd>APRESENTADOR</span><span><kbd>F</kbd>TELA CHEIA</span></p>
+
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<script>
+(function(){
+  "use strict";
+  var doc=document, root=doc.documentElement;
+  root.className="js";
+
+  var stage=doc.getElementById("stage"), viewport=doc.getElementById("viewport");
+  var stepsEl=doc.getElementById("steps"), keys=doc.getElementById("keys");
+  var secEl=doc.getElementById("section"), numsEl=doc.getElementById("nums");
+  var numNow=numsEl.querySelector("b"), numTot=numsEl.querySelector("span");
+  var slides=[].slice.call(doc.querySelectorAll(".slide"));
+  var N=slides.length, W=1920, H=1080;
+
+  function reduced(){
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  /* ── the pixel engine ──────────────────────────────────────────
+     data-px is the artwork: rows split on "/", one character per cell.
+     Cells draw themselves in on the diagonal, which is the one piece
+     of authored motion in the deck.                                */
+  var PAL={K:"#000000",W:"#FFFFFF",Y:"#FFFF4D",C:"#FF5C5C",B:"#4D7CFF",L:"#7CFF5C",P:"#FF99FF"};
+
+  [].forEach.call(doc.querySelectorAll("[data-px]"), function(el){
+    var rows=el.getAttribute("data-px").split("/");
+    var cols=0;
+    rows.forEach(function(r){ if(r.length>cols) cols=r.length; });
+    el.style.setProperty("--cols", cols);
+    var frag=doc.createDocumentFragment();
+    rows.forEach(function(row,y){
+      for(var x=0;x<cols;x++){
+        var ch=row.charAt(x);
+        if(!ch || ch===".") continue;
+        var cell=doc.createElement("i");
+        cell.style.gridArea=(y+1)+" / "+(x+1);
+        cell.style.background=PAL[ch]||ch;
+        cell.style.setProperty("--d", x*2 + y);
+        frag.appendChild(cell);
+      }
+    });
+    el.appendChild(frag);
+  });
+
+  /* ── the letterbox wells ──────────────────────────────────────────
+     A 16:9 canvas in a wider window leaves two dead gutters. Each one is
+     a Tetris well, and the height of its stack is the slide's clock: empty
+     when the slide opens, topped out at the slide's time budget. When the
+     budget runs out the stack turns coral, which is the cue to move on.
+     The room sees pixel art; the presenter reads a timer.               */
+  var SHAPES=[
+    [[0,0],[1,0],[2,0],[3,0]],  /* I */
+    [[0,0],[1,0],[0,1],[1,1]],  /* O */
+    [[0,0],[1,0],[2,0],[1,1]],  /* T */
+    [[1,0],[2,0],[0,1],[1,1]],  /* S */
+    [[0,0],[1,0],[1,1],[2,1]],  /* Z */
+    [[0,0],[0,1],[1,1],[2,1]],  /* J */
+    [[2,0],[0,1],[1,1],[2,1]]   /* L */
+  ];
+  var HUES=["Y","B","L","P"];   /* coral is reserved for "time is up" */
+
+  function rotCW(cs){
+    var my=0; cs.forEach(function(c){ if(c[1]>my) my=c[1]; });
+    return cs.map(function(c){ return [my-c[1], c[0]]; });
+  }
+  function makeRng(seed){
+    var v=(seed>>>0)||1;
+    return function(){ v^=v<<13; v>>>=0; v^=v>>17; v^=v<<5; v>>>=0; return v/4294967296; };
+  }
+
+  function Well(host, seed){
+    var cols=0, rows=0, cell=0, grid=null, boxes=[], piece=null, topped=false;
+    var rand=makeRng(seed);
+
+    function layout(w,h){
+      cols=Math.max(3, Math.min(6, Math.round(w/34)));
+      cell=w/cols;
+      rows=Math.max(6, Math.floor(h/cell));
+      host.textContent="";
+      boxes=[];
+      var frag=doc.createDocumentFragment();
+      for(var y=0;y<rows;y++) for(var x=0;x<cols;x++){
+        var b=doc.createElement("i");
+        b.style.cssText="left:"+(x*cell)+"px;top:"+(h-(rows-y)*cell)+"px;width:"+Math.ceil(cell)+"px;height:"+Math.ceil(cell)+"px;opacity:0";
+        frag.appendChild(b); boxes.push(b);
+      }
+      host.appendChild(frag);
+      reset();
+    }
+    function reset(){ if(!cols) return; grid=new Array(cols*rows).fill(null); piece=null; topped=false; paint(false); }
+    /* the readable quantity is how HIGH the pile is, not how many cells it uses:
+       tetrominoes leave overhangs, so a cell count can never reach the top   */
+    function height(){
+      for(var y=0;y<rows;y++) for(var x=0;x<cols;x++) if(grid[y*cols+x]) return rows-y;
+      return 0;
+    }
+    function hits(px,py,cs){
+      for(var i=0;i<cs.length;i++){
+        var x=px+cs[i][0], y=py+cs[i][1];
+        if(x<0||x>=cols||y>=rows) return true;
+        if(y>=0 && grid[y*cols+x]) return true;
+      }
+      return false;
+    }
+    function spawn(){
+      var sh=SHAPES[(rand()*SHAPES.length)|0], n=(rand()*4)|0;
+      while(n--) sh=rotCW(sh);
+      var w=0; sh.forEach(function(c){ if(c[0]+1>w) w=c[0]+1; });
+      /* drop onto the lowest column so the stack rises evenly and reads as a level */
+      var best=0, low=1e9;
+      for(var x=0;x<=cols-w;x++){
+        var hgt=0;
+        for(var k=0;k<w;k++){
+          var col=x+k;
+          for(var y=0;y<rows;y++) if(grid[y*cols+col]){ if(rows-y>hgt) hgt=rows-y; break; }
+        }
+        if(hgt<low || (hgt===low && rand()<0.45)){ low=hgt; best=x; }
+      }
+      if(hits(best,-1,sh)){ topped=true; return; }
+      piece={c:sh, x:best, y:-2, col:PAL[HUES[(rand()*HUES.length)|0]]};
+    }
+    function lock(){
+      piece.c.forEach(function(c){
+        var x=piece.x+c[0], y=piece.y+c[1];
+        if(y>=0&&y<rows) grid[y*cols+x]=piece.col;
+      });
+      piece=null;
+    }
+    function tick(target, expired, budget){
+      if(!grid) return;
+      var need=Math.round(target*rows), have=height();
+      if(piece){
+        /* one piece gets budget/(cells/4) seconds; it must land inside that, or
+           the pile falls behind the clock it is supposed to be reporting */
+        var perPiece=Math.max(1,(budget/(cols*rows/4))/0.09);
+        var move=Math.max(1, Math.ceil(rows/(perPiece*0.72)));
+        if(need-have > 3) move+=2;
+        while(move-- > 0){
+          if(hits(piece.x,piece.y+1,piece.c)){ lock(); break; }
+          piece.y++;
+        }
+      } else if(!topped && have<need){
+        spawn();
+      }
+      paint(expired);
+    }
+    function paint(expired){
+      if(!grid) return;
+      var buf=grid.slice();
+      if(piece) piece.c.forEach(function(c){
+        var x=piece.x+c[0], y=piece.y+c[1];
+        if(y>=0&&y<rows&&x>=0&&x<cols) buf[y*cols+x]=piece.col;
+      });
+      for(var i=0;i<boxes.length;i++){
+        var v=buf[i];
+        boxes[i].style.opacity=v?"1":"0";
+        if(v) boxes[i].style.background=expired?PAL.C:v;
+      }
+    }
+    return {layout:layout, reset:reset, tick:tick};
+  }
+
+  var gutL=doc.querySelector(".gutter.l"), gutR=doc.querySelector(".gutter.r");
+  var wellL=Well(gutL, 1728), wellR=Well(gutR, 2005);
+  var gutterOn=false, slotSpent=0, slotBudget=60, lastSlide=-1;
+
+  function sizeGutters(){
+    var s=Math.min(viewport.clientWidth/W, viewport.clientHeight/H);
+    var g=Math.floor((viewport.clientWidth-W*s)/2);
+    gutterOn = g>=66 && !reduced();
+    if(!gutterOn){ gutL.removeAttribute("data-live"); gutR.removeAttribute("data-live"); return; }
+    gutL.setAttribute("data-live",""); gutR.setAttribute("data-live","");
+    gutL.style.width=g+"px"; gutR.style.width=g+"px";
+    wellL.layout(g, viewport.clientHeight);
+    wellR.layout(g, viewport.clientHeight);
+  }
+
+  /* fit the 1920×1080 canvas into the viewport */
+  function fit(){
+    var s=Math.min(viewport.clientWidth/W, viewport.clientHeight/H);
+    if(!(s>0)) s=1;
+    stage.style.transform="translate("+(-W*s/2)+"px,"+(-H*s/2)+"px) scale("+s+")";
+    sizeGutters();
+  }
+  window.addEventListener("resize", fit);
+  fit();
+
+  /* one clock drives both wells; it stops while the tab is hidden */
+  setInterval(function(){
+    if(!gutterOn || doc.hidden) return;
+    slotSpent += 0.09;
+    var target=Math.min(1, slotSpent/slotBudget), expired=slotSpent>=slotBudget;
+    wellL.tick(target, expired, slotBudget);
+    wellR.tick(target, expired, slotBudget);
+  }, 90);
+
+  /* per-slide step groups */
+  var groups=slides.map(function(sl){
+    var g={}, max=0;
+    [].forEach.call(sl.querySelectorAll("[data-step]"), function(el){
+      var k=parseInt(el.getAttribute("data-step"),10)||0;
+      (g[k]=g[k]||[]).push(el);
+      if(k>max) max=k;
+    });
+    return {map:g, max:max};
+  });
+
+  var units=groups.map(function(g){ return g.max+1; });
+  var offset=[], acc=0;
+  units.forEach(function(u){ offset.push(acc); acc+=u; });
+  var totalUnits=acc;
+
+  /* the progress strip is one square per beat, not a sliding bar */
+  var pips=[];
+  (function(){
+    var frag=doc.createDocumentFragment();
+    for(var i=0;i<totalUnits;i++){ var p=doc.createElement("i"); pips.push(p); frag.appendChild(p); }
+    stepsEl.appendChild(frag);
+  })();
+
+  var cur=0, step=0;
+  function pad(n){ return (n<10?"0":"")+n; }
+
+  function paint(animateSteps){
+    var g=groups[cur];
+
+    slides.forEach(function(sl,i){
+      sl.classList.toggle("is-active", i===cur);
+      if(i!==cur){
+        sl.removeAttribute("data-cur");
+        [].forEach.call(sl.querySelectorAll("[data-step]"), function(el){
+          el.classList.remove("is-in"); el.style.animationDelay="";
+        });
+      }
+    });
+
+    var slide=slides[cur];
+    slide.setAttribute("data-cur", String(step));
+
+    Object.keys(g.map).forEach(function(k){
+      var n=parseInt(k,10);
+      g.map[k].forEach(function(el,idx){
+        var show=n<=step;
+        var delay=(animateSteps && show && n===step && !reduced()) ? Math.min(idx*60,360) : 0;
+        el.style.animationDelay=delay+"ms";
+        el.classList.toggle("is-in", show);
+      });
+    });
+
+    if(lastSlide!==cur){
+      if(lastSlide>=0 && !reduced()) clearLine(slides[lastSlide]);
+      lastSlide=cur;
+      slotSpent=0;
+      slotBudget=parseFloat(slide.getAttribute("data-secs"))||60;
+      wellL.reset(); wellR.reset();
+    }
+
+    stage.setAttribute("data-slide", String(cur+1));
+    stage.setAttribute("data-tone", slide.getAttribute("data-tone")||"");
+    if(slide.classList.contains("final") && step===2) stage.setAttribute("data-flood","");
+    else stage.removeAttribute("data-flood");
+
+    secEl.textContent=slide.getAttribute("data-section")||"";
+    numNow.textContent=pad(cur+1);
+    numTot.textContent=pad(N);
+
+    var at=offset[cur]+step;
+    pips.forEach(function(p,i){
+      p.className = i<at ? "on" : (i===at ? "now" : "");
+    });
+
+    syncPresenter();
+
+    try{ history.replaceState(null,"","#"+(cur+1)); }catch(e){}
+  }
+
+  /* the outgoing slide stays painted, on top, for the length of the clear */
+  var clearing=null, clearTimer=0;
+  function clearLine(el){
+    if(clearing){ clearing.classList.remove("is-out"); clearTimeout(clearTimer); }
+    clearing=el;
+    el.classList.remove("is-out");
+    void el.offsetWidth;          /* restart the animation on a fast re-entry */
+    el.classList.add("is-out");
+    clearTimer=setTimeout(function(){
+      el.classList.remove("is-out");
+      if(clearing===el) clearing=null;
+    }, 340);
+  }
+
+  function go(i,s,animate){
+    cur=Math.max(0, Math.min(N-1, i));
+    step=Math.max(0, Math.min(groups[cur].max, s));
+    paint(animate!==false);
+  }
+  function next(){
+    if(step<groups[cur].max) return go(cur, step+1);
+    if(cur<N-1) return go(cur+1, 0);
+  }
+  function prev(){
+    if(step>0) return go(cur, step-1);
+    if(cur>0) return go(cur-1, groups[cur-1].max);
+  }
+
+  /* ── presenter view ──────────────────────────────────────────────
+     `P` opens a second window with the running clock against the ten-minute
+     slot, where the deck is, and which slide is next. Arrow keys work from
+     either window, so the deck can be driven from the laptop screen.      */
+  var pres=null, started=0, tick=0;
+
+  var PRES_CSS = [
+    "*{box-sizing:border-box;margin:0;padding:0}",
+    "body{font:16px/1.6 ui-sans-serif,system-ui,sans-serif;background:#000;color:#fff;padding:22px 26px}",
+    "header{display:flex;align-items:baseline;gap:20px;border-bottom:6px solid #FFFF4D;padding-bottom:14px;margin-bottom:20px}",
+    "#p-num{font-size:34px;font-weight:800;letter-spacing:-.02em}",
+    "#p-sec{font-size:12px;letter-spacing:.2em;color:#FFFF4D;font-weight:700}",
+    "#p-clock{margin-left:auto;font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}",
+    "#p-clock.over{color:#FF5C5C}",
+    "footer{margin-top:24px;padding-top:14px;border-top:3px solid #333;color:#9A9A9A;font-size:14px}",
+    "footer b{display:block;color:#fff;font-size:19px;font-weight:700;margin-top:5px}",
+    "kbd{background:#fff;color:#000;padding:1px 5px;font:inherit;font-size:12px}"
+  ].join("");
+
+  var PRES_HTML =
+    "<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'>" +
+    "<title>Apresentador — Educacao sem distancia</title><style>" + PRES_CSS + "</style></head><body>" +
+    "<header><span id='p-num'></span><span id='p-sec'></span><span id='p-clock'>00:00</span></header>" +
+        "<footer>A SEGUIR<b id='p-next'></b><p style='margin-top:12px'><kbd>&larr;</kbd> <kbd>&rarr;</kbd> navegam o deck daqui tambem</p></footer>" +
+    "</body></html>";
+
+  function syncPresenter(){
+    if(!pres || pres.closed) return;
+    var d=pres.document, sl=slides[cur];
+    var n=d.getElementById("p-num"); if(!n) return;
+    n.textContent=pad(cur+1)+" / "+pad(N);
+    d.getElementById("p-sec").textContent=sl.getAttribute("data-section")||"";
+    var nx=slides[cur+1];
+    d.getElementById("p-next").textContent =
+      nx ? (nx.querySelector(".h,.h-xl")||{textContent:""}).textContent.trim() : "— fim —";
+  }
+
+  function clock(){
+    if(!pres || pres.closed) return;
+    var el=pres.document.getElementById("p-clock"); if(!el) return;
+    var t=Math.floor((Date.now()-started)/1000);
+    el.textContent=pad(Math.floor(t/60))+":"+pad(t%60);
+    if(t>600) el.className="over";        /* the slot is ten minutes */
+  }
+
+  function openPresenter(){
+    if(pres && !pres.closed){ pres.focus(); syncPresenter(); return; }
+    pres=window.open("", "deck-presenter", "width=1040,height=780");
+    if(!pres) return;                      /* popup blocked, the deck itself is unaffected */
+    pres.document.open(); pres.document.write(PRES_HTML); pres.document.close();
+    if(!started) started=Date.now();
+    clearInterval(tick); tick=setInterval(clock, 500);
+    pres.addEventListener("keydown", function(e){
+      var k=e.key;
+      if(k==="ArrowRight"||k==="ArrowDown"||k===" "){ e.preventDefault(); next(); }
+      else if(k==="ArrowLeft"||k==="ArrowUp"){ e.preventDefault(); prev(); }
+    });
+    pres.addEventListener("unload", function(){ clearInterval(tick); });
+    syncPresenter(); clock();
+  }
+  window.addEventListener("pagehide", function(){ if(pres && !pres.closed) pres.close(); });
+
+  doc.addEventListener("keydown", function(e){
+    if(e.ctrlKey||e.metaKey||e.altKey) return;
+    var k=e.key;
+    if(k==="ArrowRight"||k==="ArrowDown"||k==="PageDown"||k===" "||k==="Spacebar"){ e.preventDefault(); next(); }
+    else if(k==="ArrowLeft"||k==="ArrowUp"||k==="PageUp"){ e.preventDefault(); prev(); }
+    else if(k==="Home"){ e.preventDefault(); go(0,0); }
+    else if(k==="End"){ e.preventDefault(); go(N-1, groups[N-1].max); }
+    else if(k==="p"||k==="P"){ e.preventDefault(); openPresenter(); }
+    else if(k==="f"||k==="F"){
+      e.preventDefault();
+      var fs = doc.fullscreenElement ? doc.exitFullscreen() : (root.requestFullscreen && root.requestFullscreen());
+      if(fs && typeof fs.catch==="function") fs.catch(function(){});
+    }
+  });
+
+  viewport.addEventListener("click", function(e){
+    if(e.button!==0) return;
+    if(window.getSelection && String(window.getSelection())) return;
+    (e.clientX < viewport.clientWidth*0.28) ? prev() : next();
+  });
+
+  var tx=0, ty=0;
+  doc.addEventListener("touchstart", function(e){
+    tx=e.changedTouches[0].clientX; ty=e.changedTouches[0].clientY;
+  }, {passive:true});
+  doc.addEventListener("touchend", function(e){
+    var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)) (dx<0 ? next() : prev());
+  }, {passive:true});
+
+  var dim=setTimeout(function(){ keys.setAttribute("data-dim",""); }, 6000);
+  doc.addEventListener("keydown", function(){
+    clearTimeout(dim); keys.setAttribute("data-dim","");
+  }, {once:true});
+
+  function fromHash(){
+    var h=parseInt((location.hash||"").slice(1),10);
+    return isNaN(h) ? 0 : h-1;
+  }
+  window.addEventListener("hashchange", function(){
+    var want=fromHash();
+    if(want!==cur) go(want,0);
+  });
+  go(fromHash(), 0, false);
+  window.addEventListener("load", fit);
+})();
+</script>
+</body>
+</html>
