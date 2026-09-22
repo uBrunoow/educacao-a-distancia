@@ -395,6 +395,31 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
   #steps i.now{animation:none}
   #keys{transition:none}
 }
+
+/* ═════════════════════════ print / PDF ═════════════════════════ */
+/* `E` (or Ctrl+P) prints the deck one slide per 1920×1080 page, every
+   beat already on screen. The finale floods its slide, so it gets a page
+   of its own instead of hiding the slide it lands on.                   */
+.slide.print-only{display:none!important}
+@page{size:1920px 1080px;margin:0}
+@media print{
+  *,*::before,*::after{
+    animation:none!important;transition:none!important;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  html,body{height:auto;overflow:visible}
+  #viewport{position:static;overflow:visible}
+  #stage{position:static;transform:none!important;width:1920px;height:auto;overflow:visible}
+  .gutter,#chrome,#foot,#keys{display:none!important}
+  .slide,.slide.print-only{
+    display:block!important;position:relative;
+    width:1920px;height:1080px;overflow:hidden;
+    clip-path:none;filter:none;border:0;
+  }
+  .slide + .slide{break-before:page}
+  .js [data-step],.js .px i{opacity:1!important;transform:none!important}
+  .slide.final > .finale{display:none}
+}
 </style>
 </head>
 <body>
@@ -677,7 +702,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   <div id="steps" aria-hidden="true"></div>
   <p id="nums"><b></b> / <span></span></p>
 </div>
-<p id="keys"><span><kbd>←</kbd><kbd>→</kbd>NAVEGAR</span><span><kbd>P</kbd>APRESENTADOR</span><span><kbd>F</kbd>TELA CHEIA</span></p>
+<p id="keys"><span><kbd>←</kbd><kbd>→</kbd>NAVEGAR</span><span><kbd>P</kbd>APRESENTADOR</span><span><kbd>F</kbd>TELA CHEIA</span><span><kbd>E</kbd>PDF</span></p>
 
 </div><!-- /stage -->
 </div><!-- /viewport -->
@@ -842,6 +867,19 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     }
     return {layout:layout, reset:reset, tick:tick};
   }
+
+  /* the PDF gets the finale as its own last page; on screen it stays a beat */
+  (function(){
+    var fin=doc.querySelector(".slide.final > .finale");
+    if(!fin) return;
+    var page=doc.createElement("section");
+    page.className="slide print-only";
+    page.setAttribute("aria-hidden","true");
+    var copy=fin.cloneNode(true);
+    copy.removeAttribute("data-step");
+    page.appendChild(copy);
+    slides[N-1].parentNode.insertBefore(page, slides[N-1].nextSibling);
+  })();
 
   var gutL=doc.querySelector(".gutter.l"), gutR=doc.querySelector(".gutter.r");
   var wellL=Well(gutL, 1728), wellR=Well(gutR, 2005);
@@ -1055,6 +1093,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     else if(k==="Home"){ e.preventDefault(); go(0,0); }
     else if(k==="End"){ e.preventDefault(); go(N-1, groups[N-1].max); }
     else if(k==="p"||k==="P"){ e.preventDefault(); openPresenter(); }
+    else if(k==="e"||k==="E"){ e.preventDefault(); window.print(); }
     else if(k==="f"||k==="F"){
       e.preventDefault();
       var fs = doc.fullscreenElement ? doc.exitFullscreen() : (root.requestFullscreen && root.requestFullscreen());

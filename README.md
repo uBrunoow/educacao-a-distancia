@@ -17,6 +17,7 @@ dependências além das fontes (Google Fonts).
 | `Home` / `End` | primeira / última slide |
 | `P` | janela do apresentador: relógio de 10 min e próxima slide |
 | `F` | tela cheia |
+| `E` | exportar PDF (abre a impressão; escolha "Salvar como PDF") |
 
 Clicar na metade direita avança, na esquerda volta. Em tela sensível ao toque,
 arraste para os lados.
