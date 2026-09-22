@@ -241,8 +241,10 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 /* ═══════════════ 05 · linha do tempo ═══════════════ */
 /* x is derived from the year: 1728–1856, a marked break, then 1904–2005 */
 .tl{position:absolute;left:var(--cx);right:var(--cr);top:400px;height:392px}
+/* the dashes are real blocks, not a gradient: PDF viewers drop gradient patterns */
 .tl-axis{position:absolute;left:0;right:0;top:50%;height:11px;transform:translateY(-50%);
-  background:repeating-linear-gradient(90deg,var(--ink) 0 11px,transparent 11px 22px)}
+  display:flex;gap:11px;overflow:hidden}
+.tl-axis i{flex:none;width:11px;height:11px;background:var(--ink)}
 .tl-t{position:absolute;left:0;right:0}
 .tl-t.w{bottom:50%}
 .tl-t.b{top:50%}
@@ -880,6 +882,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     page.appendChild(copy);
     slides[N-1].parentNode.insertBefore(page, slides[N-1].nextSibling);
   })();
+
+  /* the timeline axis is dashed in 11px blocks; overflow trims the tail */
+  [].forEach.call(doc.querySelectorAll(".tl-axis"), function(el){
+    el.innerHTML=new Array(91).join("<i></i>");
+  });
 
   var gutL=doc.querySelector(".gutter.l"), gutR=doc.querySelector(".gutter.r");
   var wellL=Well(gutL, 1728), wellR=Well(gutR, 2005);
