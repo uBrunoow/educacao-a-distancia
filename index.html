@@ -78,13 +78,15 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
    Everything arrives the way a Tetris piece does: it falls along the
    pixel grid in whole-cell steps and locks hard. There is no easing
    curve anywhere in this deck — the grid is the timing function.   */
+/* lock jumps at the START of its 10ms: with steps(1,end) a delay that lands
+   on float round-off (60ms + 10ms = 69.999…) left the piece stuck invisible */
 @keyframes lock{from{opacity:0}to{opacity:1}}
 @keyframes fall{from{transform:translateY(var(--fall,-96px))}to{transform:translateY(0)}}
 
 .js [data-step]{opacity:0}
 .js [data-step].is-in{
   --fall:-80px;
-  animation:fall .3s steps(5,end) both, lock .01s var(--snap) both;
+  animation:fall .3s steps(5,end) both, lock .01s steps(1,start) both;
 }
 
 /* the headline lands first, then the artwork stacks under it */
@@ -96,13 +98,13 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 .js .slide.is-active .cover > .lead,
 .js .slide.is-active .sign{
   --fall:-64px;
-  animation:fall .26s steps(4,end) both, lock .01s var(--snap) both;
+  animation:fall .26s steps(4,end) both, lock .01s steps(1,start) both;
 }
 
 /* the closing frame is one full-height piece dropping into the well */
 .js .finale.is-in{
   --fall:-1080px;
-  animation:fall .52s steps(12,end) both, lock .01s var(--snap) both;
+  animation:fall .52s steps(12,end) both, lock .01s steps(1,start) both;
 }
 
 /* ═════════════════════════ typography ═════════════════════════ */
@@ -145,7 +147,7 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 .js .is-active .px i,
 .js .is-drawn .px i{
   --fall:calc(var(--u,24px) * -7);
-  animation:fall .42s steps(7,end) both, lock .01s var(--snap) both;
+  animation:fall .42s steps(7,end) both, lock .01s steps(1,start) both;
   animation-delay:calc(min(var(--d) * 30ms, 900ms));
 }
 
@@ -372,6 +374,32 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 .closing{margin-top:88px;padding-top:44px;border-top:6px solid var(--ink);max-width:1400px}
 .closing p{font-size:34px;line-height:1.3;font-weight:600;font-stretch:102%;letter-spacing:-.014em}
 
+/* ═══════════════ perguntas à turma ═══════════════ */
+/* the room answers first: one click reveals the key, nothing before it gives it away */
+.case{max-width:1560px;font-size:21px;line-height:1.5;color:var(--body)}
+.ask{margin-top:18px;max-width:1560px;font-size:27px;line-height:1.28;font-weight:750;font-stretch:102%;letter-spacing:-.016em}
+.alts{margin-top:24px;max-width:1640px;border-top:6px solid var(--ink)}
+.alts p{
+  display:grid;grid-template-columns:62px 1fr;align-items:baseline;
+  padding:12px 16px 12px 0;border-bottom:3px solid var(--off);
+  font-size:21px;line-height:1.4;color:var(--body);
+  transition:background .2s var(--snap),opacity .2s var(--snap);
+}
+.alts p b{font-family:var(--mono);font-size:20px;font-weight:800;font-stretch:88%;color:var(--ink);padding-left:14px}
+.key{position:absolute;right:var(--cr);top:var(--ct);background:var(--lime);padding:12px 22px}
+.key span{font-family:var(--mono);font-size:18px;font-weight:700;font-stretch:88%;letter-spacing:.2em}
+.q1:has(.key.is-in) .alts p{opacity:.3}
+.q1:has(.key.is-in) .alts p.ok{opacity:1;background:var(--lime);color:var(--ink)}
+
+.bank{display:flex;flex-wrap:wrap;gap:18px;margin-top:40px}
+.bank span{
+  border:4px solid var(--ink);padding:12px 22px;
+  font-family:var(--mono);font-size:22px;font-weight:800;font-stretch:88%;letter-spacing:.12em;
+}
+.fill{margin-top:56px;max-width:1560px;padding-top:36px;border-top:6px solid var(--ink);font-size:34px;line-height:1.75;font-weight:560;font-stretch:100%;letter-spacing:-.01em}
+.gap{display:inline-block;min-width:250px;height:1.2em;vertical-align:-.2em;border-bottom:5px solid var(--ink);text-align:center;line-height:1.2}
+.gap b{display:inline-block;background:var(--yellow);padding:0 12px;font-family:var(--mono);font-size:26px;font-weight:800;font-stretch:88%;letter-spacing:.1em}
+
 /* ═══════════════ referências ═══════════════ */
 .refs{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,auto);grid-auto-flow:column;gap:0 80px;margin-top:56px;max-width:1640px;border-top:6px solid var(--ink)}
 .refs p{padding:24px 0 24px 32px;text-indent:-32px;border-bottom:3px solid var(--off);font-size:21px;line-height:1.45;color:var(--body)}
@@ -409,7 +437,7 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
   .js .slide.is-active .cover > h1,
   .js .slide.is-active .cover > .lead,
   .js .slide.is-active .sign{
-    animation:lock .01s var(--snap) both!important;
+    animation:lock .01s steps(1,start) both!important;
     animation-delay:0s!important;
   }
   .js .sys-head.is-in .sys-wire{animation:none!important;transform:none!important}
@@ -438,6 +466,7 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
   }
   .slide + .slide{break-before:page}
   .js [data-step],.js .px i{opacity:1!important;transform:none!important}
+  .q1 .alts p.ok{background:var(--lime);color:var(--ink)}
 }
 </style>
 </head>
@@ -722,7 +751,38 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 12 · REFERÊNCIAS ═══════════════ -->
+<!-- ═══════════════ 12 · PERGUNTA 1 ═══════════════ -->
+<section class="slide q1" data-section="PERGUNTAS À TURMA" data-secs="120">
+  <p class="kick"><span>PERGUNTA 1 · MÚLTIPLA ESCOLHA</span></p>
+  <p class="case">A coordenação pedagógica de uma instituição de ensino superior constatou uma taxa de evasão superior a 30% em seus cursos a distância. O mapeamento interno apontou dois pontos centrais: a maior parte dos alunos matriculados concilia estudo e trabalho, e muitos enfrentam barreiras técnicas e de adaptação à metodologia e às plataformas virtuais de aprendizagem. A comissão precisa definir uma intervenção pedagógica que reduza o abandono sem ferir as exigências de controle de qualidade estipuladas pelo MEC.</p>
+  <p class="ask">Qual plano de ação pedagógico atende diretamente ao problema apresentado sem comprometer os referenciais de qualidade?</p>
+
+  <div class="alts">
+    <p><b>A</b><span>Eliminar o acompanhamento por tutores e abolir prazos, transformando o curso em um modelo de correspondência postal de mão única.</span></p>
+    <p><b>B</b><span>Reduzir a carga horária curricular pela metade e isentar os alunos trabalhadores de realizar qualquer tipo de avaliação de aprendizagem.</span></p>
+    <p class="ok"><b>C</b><span>Intensificar o acompanhamento da tutoria para sanar dúvidas rotineiras e aprimorar a mediação e o suporte técnico nos Ambientes Virtuais de Aprendizagem (AVAs), assegurando uma comunicação bidirecional efetiva.</span></p>
+    <p><b>D</b><span>Tornar obrigatória a presença física diária dos alunos trabalhadores no polo, descaracterizando a flexibilidade de tempo e espaço própria da modalidade.</span></p>
+    <p><b>E</b><span>Manter o ambiente virtual restrito apenas à transmissão estática de arquivos, dispensando a formação de comunidades de interação ou diálogo.</span></p>
+  </div>
+
+  <p class="key" data-step="1"><span>RESPOSTA: C</span></p>
+
+</section>
+
+<!-- ═══════════════ 13 · PERGUNTA 2 ═══════════════ -->
+<section class="slide" data-section="PERGUNTAS À TURMA" data-secs="120">
+  <p class="kick"><span>PERGUNTA 2 · COMPLETAR LACUNAS</span></p>
+  <p class="lead" style="margin-top:0;max-width:64ch">Com base na evolução histórica da EaD, use cada palavra uma vez para mostrar como a tecnologia transformou o ensinar e o aprender.</p>
+
+  <div class="bank">
+    <span>ATIVO</span><span>INTERNET</span><span>ÚNICA</span><span>BIDIRECIONAL</span><span>RECEPTOR</span>
+  </div>
+
+  <p class="fill">“Nas primeiras gerações da EaD, que utilizavam correspondência, rádio e TV, a comunicação era de via <span class="gap"><b data-step="1">ÚNICA</b></span>, limitando o aluno a ser um mero <span class="gap"><b data-step="1">RECEPTOR</b></span> de mensagens. Com a chegada da <span class="gap"><b data-step="1">INTERNET</b></span> e dos Ambientes Virtuais de Aprendizagem (3ª geração), a comunicação tornou-se <span class="gap"><b data-step="1">BIDIRECIONAL</b></span>, exigindo interatividade e transformando o estudante em um participante <span class="gap"><b data-step="1">ATIVO</b></span> e colaborativo.”</p>
+
+</section>
+
+<!-- ═══════════════ 14 · REFERÊNCIAS ═══════════════ -->
 <section class="slide" data-section="REFERÊNCIAS" data-secs="20">
   <h2 class="h">Referências.</h2>
 
@@ -742,7 +802,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 13 · ENCERRAMENTO ═══════════════ -->
+<!-- ═══════════════ 15 · ENCERRAMENTO ═══════════════ -->
 <section class="slide final" data-section="ENCERRAMENTO" data-secs="30">
 
   <div class="finale" data-step="0">
