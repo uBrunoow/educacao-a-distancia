@@ -88,6 +88,7 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 }
 
 /* the headline lands first, then the artwork stacks under it */
+.js .slide.is-active > .kick,
 .js .slide.is-active > .h,
 .js .slide.is-active > .lead,
 .js .slide.is-active .meta,
@@ -200,7 +201,19 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 .bar span{font-family:var(--mono);font-size:14px;font-weight:700;font-stretch:88%;letter-spacing:.2em}
 .cursor{position:absolute;left:1180px;bottom:-140px}
 
-/* ═══════════════ 02 · o percurso ═══════════════ */
+/* ═══════════════ 02 · sumário ═══════════════ */
+.toc{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,auto);grid-auto-flow:column;gap:0 96px;margin-top:72px;max-width:1480px}
+.toc > div{display:grid;grid-template-columns:40px 64px 1fr;align-items:center;padding:24px 0;border-bottom:3px solid var(--off)}
+.toc > div:nth-child(1),.toc > div:nth-child(5){border-top:6px solid var(--ink)}
+.toc i{width:26px;height:26px;background:var(--c)}
+.toc span{font-family:var(--mono);font-size:18px;font-weight:700;font-stretch:88%;letter-spacing:.14em;color:var(--mute)}
+.toc p{font-size:32px;font-weight:780;font-stretch:104%;letter-spacing:-.024em;line-height:1.1}
+
+/* a section marker the room can read, not just the chrome label */
+.kick{display:inline-block;margin-bottom:26px;background:var(--ink);color:var(--paper);padding:12px 22px}
+.kick span{font-family:var(--mono);font-size:18px;font-weight:700;font-stretch:88%;letter-spacing:.2em}
+
+/* ═══════════════ 03 · o percurso ═══════════════ */
 .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:96px;max-width:1520px}
 .flow > div{padding:26px 30px 120px;border-top:6px solid var(--ink);position:relative}
 .flow > div + div{border-left:3px solid var(--off)}
@@ -359,6 +372,12 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 .closing{margin-top:88px;padding-top:44px;border-top:6px solid var(--ink);max-width:1400px}
 .closing p{font-size:34px;line-height:1.3;font-weight:600;font-stretch:102%;letter-spacing:-.014em}
 
+/* ═══════════════ referências ═══════════════ */
+.refs{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,auto);grid-auto-flow:column;gap:0 80px;margin-top:56px;max-width:1640px;border-top:6px solid var(--ink)}
+.refs p{padding:24px 0 24px 32px;text-indent:-32px;border-bottom:3px solid var(--off);font-size:21px;line-height:1.45;color:var(--body)}
+.refs b{color:var(--ink);font-weight:750}
+.refs-note{margin-top:26px;font-family:var(--mono);font-size:14px;font-weight:600;font-stretch:88%;letter-spacing:.1em;color:var(--mute)}
+
 /* the last beat: the whole frame floods and the cover line comes back */
 .finale{
   position:absolute;inset:0;background:var(--paper);z-index:10;
@@ -383,6 +402,7 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
   .js .px i,
   .js .is-active .px i,
   .js .is-drawn .px i,
+  .js .slide.is-active > .kick,
   .js .slide.is-active > .h,
   .js .slide.is-active > .lead,
   .js .slide.is-active .meta,
@@ -400,9 +420,7 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 
 /* ═════════════════════════ print / PDF ═════════════════════════ */
 /* `E` (or Ctrl+P) prints the deck one slide per 1920×1080 page, every
-   beat already on screen. The finale floods its slide, so it gets a page
-   of its own instead of hiding the slide it lands on.                   */
-.slide.print-only{display:none!important}
+   beat already on screen.                                              */
 @page{size:1920px 1080px;margin:0}
 @media print{
   *,*::before,*::after{
@@ -413,14 +431,13 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
   #viewport{position:static;overflow:visible}
   #stage{position:static;transform:none!important;width:1920px;height:auto;overflow:visible}
   .gutter,#chrome,#foot,#keys{display:none!important}
-  .slide,.slide.print-only{
+  .slide{
     display:block!important;position:relative;
     width:1920px;height:1080px;overflow:hidden;
     clip-path:none;filter:none;border:0;
   }
   .slide + .slide{break-before:page}
   .js [data-step],.js .px i{opacity:1!important;transform:none!important}
-  .slide.final > .finale{display:none}
 }
 </style>
 </head>
@@ -470,8 +487,26 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 02 · A SALA DE AULA MUDOU ═══════════════ -->
-<section class="slide" data-section="CONTEXTO">
+<!-- ═══════════════ 02 · SUMÁRIO ═══════════════ -->
+<section class="slide" data-section="SUMÁRIO" data-secs="30">
+  <h2 class="h">Sumário.</h2>
+
+  <div class="toc">
+    <div><i style="--c:var(--blue)"></i><span>01</span><p>Introdução</p></div>
+    <div><i style="--c:var(--yellow)"></i><span>02</span><p>Conceitos</p></div>
+    <div><i style="--c:var(--ink)"></i><span>03</span><p>Histórico</p></div>
+    <div><i style="--c:var(--pink)"></i><span>04</span><p>Legislação e qualidade</p></div>
+    <div><i style="--c:var(--coral)"></i><span>05</span><p>Desafios: evasão e tutoria</p></div>
+    <div><i style="--c:var(--lime)"></i><span>06</span><p>Considerações finais</p></div>
+    <div><i style="--c:var(--blue)"></i><span>07</span><p>Perguntas à turma</p></div>
+  </div>
+
+  <div class="px" data-px="......BB/....BBBB/..YYBB../YYYY..../YY......" style="--u:34px;position:absolute;right:0;bottom:0" aria-hidden="true"></div>
+
+</section>
+
+<!-- ═══════════════ 03 · A SALA DE AULA MUDOU ═══════════════ -->
+<section class="slide" data-section="INTRODUÇÃO">
   <h2 class="h">A sala de aula mudou.</h2>
   <p class="lead">A EaD saiu da margem e virou um caminho central de acesso ao ensino superior brasileiro.</p>
 
@@ -486,8 +521,8 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 03 · O QUE É EaD ═══════════════ -->
-<section class="slide" data-section="CONCEITO">
+<!-- ═══════════════ 04 · O QUE É EaD ═══════════════ -->
+<section class="slide" data-section="CONCEITOS">
   <h2 class="h">Aprender sem dividir o mesmo espaço.</h2>
   <p class="lead">Professor e aluno separados no espaço e no tempo, com a tecnologia fazendo a mediação.</p>
 
@@ -510,8 +545,8 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 04 · QUATRO CARACTERÍSTICAS ═══════════════ -->
-<section class="slide" data-section="CONCEITO">
+<!-- ═══════════════ 05 · QUATRO CARACTERÍSTICAS ═══════════════ -->
+<section class="slide" data-section="CONCEITOS">
   <h2 class="h">Quatro características definem essa experiência.</h2>
 
   <div class="rows">
@@ -525,7 +560,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 05 · HISTÓRICO ═══════════════ -->
+<!-- ═══════════════ 06 · HISTÓRICO ═══════════════ -->
 <section class="slide" data-section="HISTÓRICO">
   <h2 class="h">A EaD começou muito antes da internet.</h2>
 
@@ -558,7 +593,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 06 · MÃO ÚNICA → INTERAÇÃO ═══════════════ -->
+<!-- ═══════════════ 07 · MÃO ÚNICA → INTERAÇÃO ═══════════════ -->
 <section class="slide" data-section="HISTÓRICO">
   <h2 class="h">A tecnologia mudou mais do que o canal.</h2>
   <p class="lead">O estudante deixou de apenas receber.</p>
@@ -597,7 +632,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 07 · ARTIGO 80 ═══════════════ -->
+<!-- ═══════════════ 08 · ARTIGO 80 ═══════════════ -->
 <section class="slide" data-section="LEGISLAÇÃO">
   <h2 class="h" style="max-width:24ch">A educação digital também precisa de regras.</h2>
   <p class="lead" style="max-width:62ch">O artigo 80 da LDB deu base legal à EaD e criou a exigência de regular e supervisionar. Decretos e normas do MEC detalharam essas regras depois.</p>
@@ -623,7 +658,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 08 · GESTÃO E QUALIDADE ═══════════════ -->
+<!-- ═══════════════ 09 · GESTÃO E QUALIDADE ═══════════════ -->
 <section class="slide" data-section="LEGISLAÇÃO">
   <h2 class="h">Uma plataforma não é uma educação.</h2>
   <p class="lead" style="max-width:60ch">Qualidade vem de três frentes combinadas. Nenhuma delas basta sozinha.</p>
@@ -646,7 +681,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 09 · EVASÃO E TUTORIA ═══════════════ -->
+<!-- ═══════════════ 10 · EVASÃO E TUTORIA ═══════════════ -->
 <section class="slide" data-section="DESAFIOS">
   <h2 class="h">Acesso não garante permanência.</h2>
 
@@ -670,8 +705,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 </section>
 
-<!-- ═══════════════ 10 · FUTURO E CONCLUSÃO ═══════════════ -->
-<section class="slide final" data-section="FUTURO">
+<!-- ═══════════════ 11 · CONSIDERAÇÕES FINAIS ═══════════════ -->
+<section class="slide" data-section="CONSIDERAÇÕES FINAIS">
+  <p class="kick"><span>CONSIDERAÇÕES FINAIS</span></p>
   <h2 class="h">O próximo passo não é crescer. É amadurecer.</h2>
 
   <div class="fronts">
@@ -684,7 +720,32 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <p>A expansão recente foi quantitativa e concentrou a oferta em dois cursos: Pedagogia e Administração.</p>
   </div>
 
-  <div class="finale" data-step="2">
+</section>
+
+<!-- ═══════════════ 12 · REFERÊNCIAS ═══════════════ -->
+<section class="slide" data-section="REFERÊNCIAS" data-secs="20">
+  <h2 class="h">Referências.</h2>
+
+  <div class="refs">
+    <p><b>A EDUCAÇÃO a distância e seu movimento histórico no Brasil.</b> Revista Acadêmica Santa Cruz, n. 14.</p>
+    <p><b>A HISTÓRIA e a expansão da educação a distância:</b> um estudo de caso da Unicesumar. Redalyc.</p>
+    <p><b>ALONSO, K. M.</b> A EaD no Brasil: sobre (des)caminhos em sua instauração. Educar em Revista, Curitiba, ed. esp. n. 4, 2014.</p>
+    <p><b>BRASIL.</b> Lei nº 9.394, de 20 de dezembro de 1996. Estabelece as diretrizes e bases da educação nacional (LDB), art. 80.</p>
+    <p><b>CONCEITUANDO a educação a distância.</b> Revista de Educação e Sustentabilidade (REASE).</p>
+    <p><b>EDUCAÇÃO a distância no mundo e no Brasil.</b> Revista Educação Pública, CECIERJ, v. 19, n. 17, 2019.</p>
+    <p><b>FERREIRA, M.; COSTA, M. R. M.; MILL, D.</b> Reflexões necessárias e urgentes acerca da gestão da EAD no Brasil. Plurais, v. 6, n. 3, 2021.</p>
+    <p><b>SALVUCCI, M.; LISBOA, M. J. A.; MENDES, N. C.</b> Educação a distância no Brasil: fundamentos legais e implementação. RBAAD, v. 11, 2012.</p>
+  </div>
+  <p class="refs-note">ENDEREÇOS ELETRÔNICOS E DATAS DE ACESSO COMPLETOS NAS REFERÊNCIAS DO ARTIGO.</p>
+
+  <div class="px" data-px="......PP/....PPPP/....KK../..KKKK../..KK...." style="--u:30px;position:absolute;right:0;bottom:0" aria-hidden="true"></div>
+
+</section>
+
+<!-- ═══════════════ 13 · ENCERRAMENTO ═══════════════ -->
+<section class="slide final" data-section="ENCERRAMENTO" data-secs="30">
+
+  <div class="finale" data-step="0">
     <h2>EDUCAÇÃO<br>A DISTÂNCIA.</h2>
     <div class="px" data-px="KKKK.....KKKK/KKKK.....KKKK/KKKK.K.K.KKKK/KKKK.....KKKK/KKKK.....KKKK" style="--u:22px" aria-hidden="true"></div>
     <div class="thanks">
@@ -870,19 +931,6 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     return {layout:layout, reset:reset, tick:tick};
   }
 
-  /* the PDF gets the finale as its own last page; on screen it stays a beat */
-  (function(){
-    var fin=doc.querySelector(".slide.final > .finale");
-    if(!fin) return;
-    var page=doc.createElement("section");
-    page.className="slide print-only";
-    page.setAttribute("aria-hidden","true");
-    var copy=fin.cloneNode(true);
-    copy.removeAttribute("data-step");
-    page.appendChild(copy);
-    slides[N-1].parentNode.insertBefore(page, slides[N-1].nextSibling);
-  })();
-
   /* the timeline axis is dashed in 11px blocks; overflow trims the tail */
   [].forEach.call(doc.querySelectorAll(".tl-axis"), function(el){
     el.innerHTML=new Array(91).join("<i></i>");
@@ -985,7 +1033,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
     stage.setAttribute("data-slide", String(cur+1));
     stage.setAttribute("data-tone", slide.getAttribute("data-tone")||"");
-    if(slide.classList.contains("final") && step===2) stage.setAttribute("data-flood","");
+    if(slide.classList.contains("final")) stage.setAttribute("data-flood","");
     else stage.removeAttribute("data-flood");
 
     secEl.textContent=slide.getAttribute("data-section")||"";
