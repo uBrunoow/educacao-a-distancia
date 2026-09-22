@@ -448,7 +448,9 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
 
 /* ═════════════════════════ print / PDF ═════════════════════════ */
 /* `E` (or Ctrl+P) prints the deck one slide per 1920×1080 page, every
-   beat already on screen.                                              */
+   beat already on screen. Each question prints twice: first blank, for
+   the room, then answered.                                             */
+.slide.print-only{display:none!important}
 @page{size:1920px 1080px;margin:0}
 @media print{
   *,*::before,*::after{
@@ -459,14 +461,15 @@ html:not(.js) .slide{display:block;position:relative;height:1080px;border-bottom
   #viewport{position:static;overflow:visible}
   #stage{position:static;transform:none!important;width:1920px;height:auto;overflow:visible}
   .gutter,#chrome,#foot,#keys{display:none!important}
-  .slide{
+  .slide,.slide.print-only{
     display:block!important;position:relative;
     width:1920px;height:1080px;overflow:hidden;
     clip-path:none;filter:none;border:0;
   }
   .slide + .slide{break-before:page}
   .js [data-step],.js .px i{opacity:1!important;transform:none!important}
-  .q1 .alts p.ok{background:var(--lime);color:var(--ink)}
+  .q1:not(.q-blank) .alts p.ok{background:var(--lime);color:var(--ink)}
+  .js .q-blank [data-step]{opacity:0!important}
 }
 </style>
 </head>
@@ -752,7 +755,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 </section>
 
 <!-- ═══════════════ 12 · PERGUNTA 1 ═══════════════ -->
-<section class="slide q1" data-section="PERGUNTAS À TURMA" data-secs="120">
+<section class="slide q q1" data-section="PERGUNTAS À TURMA" data-secs="120">
   <p class="kick"><span>PERGUNTA 1 · MÚLTIPLA ESCOLHA</span></p>
   <p class="case">A coordenação pedagógica de uma instituição de ensino superior constatou uma taxa de evasão superior a 30% em seus cursos a distância. O mapeamento interno apontou dois pontos centrais: a maior parte dos alunos matriculados concilia estudo e trabalho, e muitos enfrentam barreiras técnicas e de adaptação à metodologia e às plataformas virtuais de aprendizagem. A comissão precisa definir uma intervenção pedagógica que reduza o abandono sem ferir as exigências de controle de qualidade estipuladas pelo MEC.</p>
   <p class="ask">Qual plano de ação pedagógico atende diretamente ao problema apresentado sem comprometer os referenciais de qualidade?</p>
@@ -770,7 +773,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 </section>
 
 <!-- ═══════════════ 13 · PERGUNTA 2 ═══════════════ -->
-<section class="slide" data-section="PERGUNTAS À TURMA" data-secs="120">
+<section class="slide q" data-section="PERGUNTAS À TURMA" data-secs="120">
   <p class="kick"><span>PERGUNTA 2 · COMPLETAR LACUNAS</span></p>
   <p class="lead" style="margin-top:0;max-width:64ch">Com base na evolução histórica da EaD, use cada palavra uma vez para mostrar como a tecnologia transformou o ensinar e o aprender.</p>
 
@@ -990,6 +993,14 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     }
     return {layout:layout, reset:reset, tick:tick};
   }
+
+  /* the PDF gets a blank copy of each question ahead of the answered one */
+  [].forEach.call(doc.querySelectorAll(".slide.q"), function(sl){
+    var blank=sl.cloneNode(true);
+    blank.classList.add("print-only","q-blank");
+    blank.setAttribute("aria-hidden","true");
+    sl.parentNode.insertBefore(blank, sl);
+  });
 
   /* the timeline axis is dashed in 11px blocks; overflow trims the tail */
   [].forEach.call(doc.querySelectorAll(".tl-axis"), function(el){
